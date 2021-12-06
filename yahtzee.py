@@ -1,10 +1,11 @@
 #@PydevCodeAnalysisIgnore
 from random import randint
 class Player:
-    def __init__(self):
+    def __init__(self,ID):
         #! Addition of dice values
         #" User cannot assign
         #£ Constant score
+        self.ID=ID
         self.scoreCard={
             '!Ones':-1,
             '!Twos':-1,
@@ -26,14 +27,19 @@ class Player:
         self.finalScore=False
         self.dice=[-1,-1,-1,-1,-1,-1]
         self.freshTurn()
+        self.skip=True
+        
         
     def freshTurn(self):
         self.ignoreDiceList=[]
         self.rolls=0
+        self.skip=False
         
     def turn(self):
-        self.freshTurn()
-        self.rollDice()
+        if self.rolls<3 and self.skip==False:
+            self.rollDice()
+        else:
+            print('no reroll')
         return self.dice
     
     def rollDice(self):
@@ -41,8 +47,6 @@ class Player:
         for die in range(0,len(self.dice)):
             if die not in self.ignoreDiceList:
                 self.dice[die]=randint(1,6)
-            
-            
     
     def showCard(self):
         return self.scoreCard
@@ -80,14 +84,25 @@ def diceGen(roll):
 
 
 if __name__=='__main__':
-    p1 = Player()
-    while p1.finalScore!=True:
-        print(p1.turn())
-        p1.finalScore=True
-
-    print("Well played!")
-
+    objList=[]
+    objIndex=0
+    gameLoopFlag=True
+    for i in range(2):
+        objList.append(Player(i))
         
+    while gameLoopFlag:
+        if objList[objIndex].finalScore!=True:
+            if objList[objIndex].skip==True:
+                objList[objIndex].freshTurn()
+            if input('y: ')!='y':
+                
+                objList[objIndex].skip=True
+            print('Player:',objList[objIndex].ID,'Turn',objList[objIndex].rolls,objList[objIndex].turn())
+        if objList[objIndex].skip==True:
+            if objIndex<len(objList)-1:
+                objIndex=objIndex+1
+            else:
+                objIndex=0
 '''
 Steps for Yahtzee game-play
 
