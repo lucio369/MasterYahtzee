@@ -68,41 +68,53 @@ class Player:
                 self.finalScore=True
                 self.scoreCard['!Total Score']=sum(list(self.scoreCard.values())[6:-1])
         
-def diceGen(roll):
-    diceList=[['-','-','-',],
-              ['-','-','-',],
-              ['-','-','-',]]
-    if roll % 2 !=0:
-        diceList[1][1]='0'
-    if roll > 1:
-        diceList[0][2]=diceList[2][0]='0'
-    if roll > 3:
-        diceList[0][0]=diceList[2][2]='0'
-    if roll ==6:
-        diceList[1][0]=diceList[1][2]='0'
-    return diceList
+    def diceGen(self,roll):
+        diceList=[['-','-','-',],
+                  ['-','-','-',],
+                  ['-','-','-',]]
+        if roll % 2 !=0:
+            diceList[1][1]='0'
+        if roll > 1:
+            diceList[0][2]=diceList[2][0]='0'
+        if roll > 3:
+            diceList[0][0]=diceList[2][2]='0'
+        if roll ==6:
+            diceList[1][0]=diceList[1][2]='0'
+        temp=[]
+        for row in diceList:
+            temp.append(''.join(row))
+        return temp
 
+def turnOutput(ps):
+    disDice=''
+    for i in range(0,3):disDice+=('  '.join(x[i] for x in ps))+'\n'
+    msg='''
+What'cha get?
+
+{}
+    
+So...what'cha ganna do bout' it?
+'''.format(disDice)
+    return msg
 
 if __name__=='__main__':
     objList=[]
     objIndex=0
     gameLoopFlag=True
-    for i in range(2):
+    for i in range(1): # creating object group
         objList.append(Player(i))
+    
+    temp=[]
+    for i in range(6): # roll generation
+        temp.append(objList[0].diceGen(randint(1,6)))
         
-    while gameLoopFlag:
-        if objList[objIndex].finalScore!=True:
-            if objList[objIndex].skip==True:
-                objList[objIndex].freshTurn()
-            if input('y: ')!='y':
-                
-                objList[objIndex].skip=True
-            print('Player:',objList[objIndex].ID,'Turn',objList[objIndex].rolls,objList[objIndex].turn())
-        if objList[objIndex].skip==True:
-            if objIndex<len(objList)-1:
-                objIndex=objIndex+1
-            else:
-                objIndex=0
+    msg=turnOutput(temp)
+    while gameLoopFlag: # game loop
+        print(msg)
+        input()
+        print(turnOutput(temp))
+        input()
+    
 '''
 Steps for Yahtzee game-play
 
