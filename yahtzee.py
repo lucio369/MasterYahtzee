@@ -7,120 +7,136 @@ class Player:
         #£ Constant score
         self.ID=ID
         self.scoreCard={
-            '!Ones':-1,
-            '!Twos':-1,
-            '!Threes':-1,
-            '!Fours':-1,
-            '!Fives':-1,
-            '!Sixes':-1,
+            '!1':-1,
+            '!2':-1,
+            '!3':-1,
+            '!4':-1,
+            '!5':-1,
+            '!6':-1,
             '"Sum':-1,
             '"Bonus':-1,
-            '!Three of a kind':-1,
-            '!Four of a kind':-1,
-            '£Full House':-1,
-            '£Small straight':-1,
-            '£Large straight':-1,
-            '!Chance':-1,
-            '£Yahtzee':-1,
+            '£Three of a kind':-1,
+            '£Four of a kind':-1,
+            '$Full House':-1,
+            '$Small Straight':-1,
+            '$Large Straight':-1,
+            '£Chance':-1,
+            '$Yahtzee':-1,
             '"Total Score':-1}
-        self.finalSum=False
-        self.finalScore=False
-        self.dice=[-1,-1,-1,-1,-1,-1]
-        self.freshTurn()
-        self.skip=True
-        
-        
-    def freshTurn(self):
-        self.ignoreDiceList=[]
-        self.rolls=0
-        self.skip=False
-        
-    def turn(self):
-        if self.rolls<3 and self.skip==False:
-            self.rollDice()
-        else:
-            print('no reroll')
-        return self.dice
     
-    def rollDice(self):
-        self.rolls=self.rolls+1
-        for die in range(0,len(self.dice)):
-            if die not in self.ignoreDiceList:
-                self.dice[die]=randint(1,6)
-    
-    def showCard(self):
-        return self.scoreCard
-    
-    def diceSum(self):
-        return sum(self.dice)
-    
-    def nonUserCalculations(self):
-        if self.finalSum==False:
-            if -1 not in list(self.scoreCard.values())[:6]:
-                self.finalSum=True
-                self.scoreCard['!Sum']=sum(list(self.scoreCard.values())[:6])
-                if self.scoreCard['!Sum']>62:
-                    self.scoreCard['!Bonus']=35
-                else:
-                    self.scoreCard=0
-        elif self.finalScore==False:
-            if -1 not in list(self.scoreCard.values())[6:-1]:
-                self.finalScore=True
-                self.scoreCard['!Total Score']=sum(list(self.scoreCard.values())[6:-1])
-        
-    def diceGen(self,roll):
-        diceList=[['-','-','-',],
-                  ['-','-','-',],
-                  ['-','-','-',]]
-        if roll % 2 !=0:
-            diceList[1][1]='0'
-        if roll > 1:
-            diceList[0][2]=diceList[2][0]='0'
-        if roll > 3:
-            diceList[0][0]=diceList[2][2]='0'
-        if roll ==6:
-            diceList[1][0]=diceList[1][2]='0'
-        temp=[]
-        for row in diceList:
-            temp.append(''.join(row))
-        return temp
-
-def turnOutput(ps):
-    disDice=''
-    for i in range(0,3):disDice+=('  '.join(x[i] for x in ps))+'\n'
-    msg='''
-What'cha get?
-
-{}
-    
-So...what'cha ganna do bout' it?
-'''.format(disDice)
-    return msg
-
+    def allocateScore(self,key, vals):
+        try:
+            if self.scoreCard[key]!=-1:
+                return
+        except KeyError:
+            return
+        if key[:1]=='!':#1-6
+            total=0
+            for v in vals:
+                if v == int(key[1:]):
+                    total+=v
+            self.scoreCard[key]=total
+        elif key[:1]=='£':#three of a kind, four of a kind, chance
+            total=0
+            if key[1:]=='Three of a kind':
+                required_count=3
+            elif key[1:]=='Four of a kind':
+                required_count=4
+            elif key[1:]=='Chance':
+                required_count=0
+            val_dict={}
+            for v in vals:
+                total=total+v
+                try:
+                    val_dict[v]=val_dict[v]+1
+                except KeyError:
+                    val_dict.update({v:1})
+            if required_count > max(list(val_dict.values())):
+                total=0
+            self.scoreCard[key]=total
+        elif key[:1]=='$':#full house, small straight, large straight, yahtzee
+            if key[1:]=='Full House':
+                score=25
+                val_dict={}
+                for v in vals:
+                    try:
+                        val_dict[v]=val_dict[v]+1
+                    except KeyError:
+                        val_dict.update({v:1})
+                if 2 not in list(val_dict.values()) and 3 not in list(val_dict.values()):
+                    score=0
+                self.scoreCard[key]=score
+            elif key[1:]=='Small Straight':
+                score=25
+                streak=4
+                streakCount=1
+                streakRecord=0
+                for v in range(1,len(vals)):
+                    if vals[v-1]==vals[v]-1:
+                        streakCount=streakCount+1
+                    else:
+                        streakRecord=max(streakRecord,streakCount)
+                if streakCount<streak:
+                    score=0
+                self.scoreCard[key]=score
+            elif key[1:]=='Large Straight':
+                print('here')
+                score=40
+                streak=5
+                streakCount=1
+                streakRecord=0
+                for v in range(1,len(vals)):
+                    if vals[v-1]==vals[v]-1:
+                        streakCount=streakCount+1
+                    else:
+                        streakRecord=max(streakRecord,streakCount)
+                if streakCount<streak:
+                    score=0
+                self.scoreCard[key]=score
+            elif key[1:]=='Yahtzee':
+                score=50
+                val_dict={}
+                for v in vals:
+                    try:
+                        val_dict[v]=val_dict[v]+1
+                    except KeyError:
+                        val_dict.update({v:1})
+                if 5 not in list(val_dict.values()):
+                    score=0
+                self.scoreCard[key]=score
+        elif key[:1]=='"':
+            if key[1:]=='Sum':
+                print('\nSum check\n',list(self.scoreCard.values())[:6],'\n')
+                if -1 not in list(self.scoreCard.values())[:6]:
+                    self.scoreCard[key]=sum(list(self.scoreCard.values())[:6])
+            elif key[1:]=='Bonus':
+                if self.scoreCard['"Sum']!=-1:
+                    score=0
+                    if self.scoreCard['"Sum']>62:
+                        score=35
+                    self.scoreCard[key]=score
+            elif key[1:]=='Total Score':
+                if -1 not in list(self.scoreCard.values())[6:-1]:
+                    self.scoreCard[key]=sum(list(self.scoreCard.values())[6:-1])
 if __name__=='__main__':
-    objList=[]
-    objIndex=0
     gameLoopFlag=True
+    objList=[]
     for i in range(1): # creating object group
         objList.append(Player(i))
-    
-    temp=[]
-    for i in range(6): # roll generation
-        temp.append(objList[0].diceGen(randint(1,6)))
         
-    msg=turnOutput(temp)
     while gameLoopFlag: # game loop
-        print(msg)
-        input()
-        print(turnOutput(temp))
-        input()
-    
-'''
-Steps for Yahtzee game-play
-
-1. Swap turn
-2. Roll dice and any amount of dice after for maximum of three times
-3. Allocate
-4. If no more points to allocate calculate winner and end game
-
-'''
+        rolls=[]
+        for i in range(5):#dice generation
+            rolls.append(randint(1,6))
+        rolls.sort()
+            
+        for i in objList[0].scoreCard:#outputs scorecard
+            print(i,objList[0].scoreCard[i])
+        print('\n\n{}'.format(rolls))
+        objList[0].allocateScore(input('Enter the key of the dictionary item you want to change:'),rolls)
+        objList[0].allocateScore('"Total Score',rolls)
+        if objList[0].scoreCard['"Total Score']!=-1:
+            gameLoopFlag=False
+        objList[0].allocateScore('"Sum',rolls)
+        objList[0].allocateScore('"Bonus',rolls)
+    print('\n\n============================================================================\n\nYou scored:',objList[0].scoreCard['"Total Score'],'\n\nThanks for playing')
