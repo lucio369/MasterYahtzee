@@ -20,9 +20,36 @@ class Player:
             '$Full House':-1,
             '$Small Straight':-1,
             '$Large Straight':-1,
-            '£Chance':-1,
-            '$Yahtzee':-1,
+            '£Chance':-1,            '$Yahtzee':-1,
             '"Total Score':-1}
+        self.tempConstructor()
+        
+    def tempConstructor(self):
+        self.val_dict={}
+        self.total=0
+    
+    def valueCalculator(self,vs):
+        self.tempConstructor()
+        for v in vs:
+            self.total+=v
+            try:
+                self.val_dict[v]+=+1
+            except KeyError:
+                self.val_dict.update({v:1})
+    
+    def streakCount(self,score,streak,vs):
+        streakCount=1
+        streakRecord=1
+        for v in range(1,len(vs)):
+            if vs[v-1]==vs[v]-1:
+                streakCount=streakCount+1
+            elif vs[v-1]!=vs[v]:
+                streakCount=1
+            streakRecord=max(streakRecord,streakCount)
+        if streakRecord<streak:
+            score=0
+        print(streakRecord)
+        return score
     
     def allocateScore(self,key, vals):
         try:
@@ -37,83 +64,43 @@ class Player:
                     total+=v
             self.scoreCard[key]=total
         elif key[:1]=='£':#three of a kind, four of a kind, chance
-            total=0
             if key[1:]=='Three of a kind':
                 required_count=3
             elif key[1:]=='Four of a kind':
                 required_count=4
             elif key[1:]=='Chance':
                 required_count=0
-            val_dict={}
-            for v in vals:
-                total=total+v
-                try:
-                    val_dict[v]=val_dict[v]+1
-                except KeyError:
-                    val_dict.update({v:1})
-            if required_count > max(list(val_dict.values())):
-                total=0
-            self.scoreCard[key]=total
+            self.valueCalculator(vals)
+            if required_count > max(list(self.val_dict.values())):
+                self.total=0
+            self.scoreCard[key]=self.total
         elif key[:1]=='$':#full house, small straight, large straight, yahtzee
             if key[1:]=='Full House':
                 score=25
-                val_dict={}
-                for v in vals:
-                    try:
-                        val_dict[v]=val_dict[v]+1
-                    except KeyError:
-                        val_dict.update({v:1})
-                if 2 not in list(val_dict.values()) and 3 not in list(val_dict.values()):
-                    score=0
+                self.valueCalculator(vals)
+                if 2 not in list(self.val_dict.values()):
+                    if 3 not in list(self.val_dict.values()):
+                        score=0
                 self.scoreCard[key]=score
             elif key[1:]=='Small Straight':
-                score=25
-                streak=4
-                streakCount=1
-                streakRecord=0
-                for v in range(1,len(vals)):
-                    if vals[v-1]==vals[v]-1:
-                        streakCount=streakCount+1
-                    else:
-                        streakRecord=max(streakRecord,streakCount)
-                if streakCount<streak:
-                    score=0
-                self.scoreCard[key]=score
+                self.scoreCard[key]=self.streakCount(25,4,vals)
             elif key[1:]=='Large Straight':
-                print('here')
-                score=40
-                streak=5
-                streakCount=1
-                streakRecord=0
-                for v in range(1,len(vals)):
-                    if vals[v-1]==vals[v]-1:
-                        streakCount=streakCount+1
-                    else:
-                        streakRecord=max(streakRecord,streakCount)
-                if streakCount<streak:
-                    score=0
-                self.scoreCard[key]=score
+                self.scoreCard[key]=self.streakCount(40,5,vals)
             elif key[1:]=='Yahtzee':
                 score=50
-                val_dict={}
-                for v in vals:
-                    try:
-                        val_dict[v]=val_dict[v]+1
-                    except KeyError:
-                        val_dict.update({v:1})
-                if 5 not in list(val_dict.values()):
+                self.valueCalculator(vals)
+                if 5 not in list(self.val_dict.values()):
                     score=0
                 self.scoreCard[key]=score
-        elif key[:1]=='"':
+        elif key[:1]=='"':#Sum, Bonus, Total Score (automated)
             if key[1:]=='Sum':
-                print('\nSum check\n',list(self.scoreCard.values())[:6],'\n')
                 if -1 not in list(self.scoreCard.values())[:6]:
                     self.scoreCard[key]=sum(list(self.scoreCard.values())[:6])
             elif key[1:]=='Bonus':
                 if self.scoreCard['"Sum']!=-1:
-                    score=0
-                    if self.scoreCard['"Sum']>62:
-                        score=35
+                    score=35
+                    if self.scoreCard['"Sum']<63:
+                        score=0
                     self.scoreCard[key]=score
             elif key[1:]=='Total Score':
                 if -1 not in list(self.scoreCard.values())[6:-1]:
@@ -137,6 +124,8 @@ if __name__=='__main__':
         objList[0].allocateScore('"Total Score',rolls)
         if objList[0].scoreCard['"Total Score']!=-1:
             gameLoopFlag=False
+            for i in objList[0].scoreCard:#outputs scorecard
+                print(i,objList[0].scoreCard[i])
         objList[0].allocateScore('"Sum',rolls)
         objList[0].allocateScore('"Bonus',rolls)
     print('\n\n============================================================================\n\nYou scored:',objList[0].scoreCard['"Total Score'],'\n\nThanks for playing')
