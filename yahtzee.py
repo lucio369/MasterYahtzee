@@ -20,9 +20,15 @@ class Player:
             '$Full House':-1,
             '$Small Straight':-1,
             '$Large Straight':-1,
-            '£Chance':-1,            '$Yahtzee':-1,
+            '£Chance':-1,            
+            '$Yahtzee':-1,
             '"Total Score':-1}
         self.tempConstructor()
+        self.rollPrep()
+        
+    def rollPrep(self):
+        self.rolls=[-1,-1,-1,-1,-1]
+        self.rollCount=0
         
     def tempConstructor(self):
         self.val_dict={}
@@ -51,7 +57,7 @@ class Player:
         print(streakRecord)
         return score
     
-    def allocateScore(self,key, vals):
+    def allocateScore(self,key):
         try:
             if self.scoreCard[key]!=-1:
                 return
@@ -59,7 +65,7 @@ class Player:
             return
         if key[:1]=='!':#1-6
             total=0
-            for v in vals:
+            for v in self.rolls:
                 if v == int(key[1:]):
                     total+=v
             self.scoreCard[key]=total
@@ -70,25 +76,25 @@ class Player:
                 required_count=4
             elif key[1:]=='Chance':
                 required_count=0
-            self.valueCalculator(vals)
+            self.valueCalculator(self.rolls)
             if required_count > max(list(self.val_dict.values())):
                 self.total=0
             self.scoreCard[key]=self.total
         elif key[:1]=='$':#full house, small straight, large straight, yahtzee
             if key[1:]=='Full House':
                 score=25
-                self.valueCalculator(vals)
+                self.valueCalculator(self.rolls)
                 if 2 not in list(self.val_dict.values()):
                     if 3 not in list(self.val_dict.values()):
                         score=0
                 self.scoreCard[key]=score
             elif key[1:]=='Small Straight':
-                self.scoreCard[key]=self.streakCount(25,4,vals)
+                self.scoreCard[key]=self.streakCount(25,4,self.rolls)
             elif key[1:]=='Large Straight':
-                self.scoreCard[key]=self.streakCount(40,5,vals)
+                self.scoreCard[key]=self.streakCount(40,5,self.rolls)
             elif key[1:]=='Yahtzee':
                 score=50
-                self.valueCalculator(vals)
+                self.valueCalculator(self.rolls)
                 if 5 not in list(self.val_dict.values()):
                     score=0
                 self.scoreCard[key]=score
@@ -105,6 +111,24 @@ class Player:
             elif key[1:]=='Total Score':
                 if -1 not in list(self.scoreCard.values())[6:-1]:
                     self.scoreCard[key]=sum(list(self.scoreCard.values())[6:-1])
+    
+    def roll(self,*args):
+        print(args)
+        if len(args)>0:
+            args=args[0]
+            
+        for i in range(5):
+            if str(i) in args:
+                self.rolls[i]=-1
+            if self.rolls[i]==-1:
+                self.rolls[i]=randint(1,6)
+        self.rolls.sort()
+        self.rollCount+=1
+        if self.rollCount>=3 or len(args)<1:
+            return False
+        else:
+            return True
+        
 if __name__=='__main__':
     gameLoopFlag=True
     objList=[]
@@ -112,20 +136,43 @@ if __name__=='__main__':
         objList.append(Player(i))
         
     while gameLoopFlag: # game loop
-        rolls=[]
-        for i in range(5):#dice generation
-            rolls.append(randint(1,6))
-        rolls.sort()
             
         for i in objList[0].scoreCard:#outputs scorecard
             print(i,objList[0].scoreCard[i])
-        print('\n\n{}'.format(rolls))
-        objList[0].allocateScore(input('Enter the key of the dictionary item you want to change:'),rolls)
-        objList[0].allocateScore('"Total Score',rolls)
+        quickLoop=True
+        objList[0].roll()
+        while quickLoop:
+            print('\n\n{}'.format(objList[0].rolls))
+            cutlist=list(input('Enter the indexes of rolls you wish to change').strip())
+            badChar=False
+            for index in cutlist:
+                try:
+                    index=int(index)
+                    if index in range(0,5):
+                        quickLoop=False
+                    else:
+                        print("That's not 0-4")
+                except ValueError:
+                    badChar=True
+                    quickLoop=True
+            if badChar:
+                print('Inappropriate character')
+            elif objList[0].roll(cutlist)==False:
+                quickLoop=False
+                print('\n\n{}'.format(objList[0].rolls))
+        quickLoop=True
+        while quickLoop:
+            key=input('Enter the key of the dictionary item you want to change:')
+            if key in objList[0].scoreCard:
+                if objList[0].scoreCard[key]==-1:
+                    quickLoop=False
+        objList[0].allocateScore(key)
+        objList[0].allocateScore('"Total Score')
         if objList[0].scoreCard['"Total Score']!=-1:
             gameLoopFlag=False
             for i in objList[0].scoreCard:#outputs scorecard
                 print(i,objList[0].scoreCard[i])
-        objList[0].allocateScore('"Sum',rolls)
-        objList[0].allocateScore('"Bonus',rolls)
+        objList[0].allocateScore('"Sum')
+        objList[0].allocateScore('"Bonus')
+        objList[0].rollPrep()
     print('\n\n============================================================================\n\nYou scored:',objList[0].scoreCard['"Total Score'],'\n\nThanks for playing')
