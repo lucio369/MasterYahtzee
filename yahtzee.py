@@ -1,7 +1,8 @@
 #@PydevCodeAnalysisIgnore
 from random import randint
+from pip._internal import self_outdated_check
 class Player:
-    def __init__(self,ID):
+    def __init__(self,ID):#init function for Player
         #! Addition of dice values
         #" User cannot assign
         #£ Constant score
@@ -26,24 +27,25 @@ class Player:
         self.tempConstructor()
         self.rollPrep()
         
-    def rollPrep(self):
+    def rollPrep(self):#resets temp round variables for roll method
         self.rolls=[-1,-1,-1,-1,-1]
         self.rollCount=0
         
-    def tempConstructor(self):
+    def tempConstructor(self):#resets temp round variables for value calculator
         self.val_dict={}
         self.total=0
     
-    def valueCalculator(self,vs):
+    #NOTE: Isn't value calculator a kind of form of StreakCount? 
+    def valueCalculator(self,vs):#counts values of dice instances
         self.tempConstructor()
         for v in vs:
             self.total+=v
             try:
-                self.val_dict[v]+=+1
+                self.val_dict[v]+=1
             except KeyError:
                 self.val_dict.update({v:1})
     
-    def streakCount(self,score,streak,vs):
+    def streakCount(self,score,streak,vs):#counts instances of dice
         streakCount=1
         streakRecord=1
         for v in range(1,len(vs)):
@@ -57,7 +59,7 @@ class Player:
         print(streakRecord)
         return score
     
-    def allocateScore(self,key):
+    def allocateScore(self,key):#allocates points according to how roll meets conditions
         try:
             if self.scoreCard[key]!=-1:
                 return
@@ -112,9 +114,8 @@ class Player:
                 if -1 not in list(self.scoreCard.values())[6:-1]:
                     self.scoreCard[key]=sum(list(self.scoreCard.values())[6:-1])
     
-    def roll(self,*args):
-        print(args)
-        if len(args)>0:
+    def roll(self,*args):#rolls dice and allows for specific dice to be rolled
+        if len(args)>0:#!!!!!!!!!!!!!!!!!!!
             args=args[0]
             
         for i in range(5):
@@ -128,23 +129,34 @@ class Player:
             return False
         else:
             return True
-        
-if __name__=='__main__':
+    
+    
+    def outScore(self):#outputs scorecard
+        outMsg=''
+        for i in self.scoreCard:
+            outMsg=outMsg+i+' '+str(self.scoreCard[i])+'\n'
+        return outMsg
+
+if __name__=='__main__':#only run if not imported
     gameLoopFlag=True
-    objList=[]
-    for i in range(1): # creating object group
+    
+    objList=[]#creating object group
+    for i in range(1):
         objList.append(Player(i))
         
     while gameLoopFlag: # game loop
-            
-        for i in objList[0].scoreCard:#outputs scorecard
-            print(i,objList[0].scoreCard[i])
-        quickLoop=True
-        objList[0].roll()
+        
+        print(objList[0].outScore())#output player's score card
+        
+        objList[0].roll()#initial roll
+        
+        quickLoop=True#Loop to analyse input for validity
         while quickLoop:
-            print('\n\n{}'.format(objList[0].rolls))
-            cutlist=list(input('Enter the indexes of rolls you wish to change').strip())
-            badChar=False
+            
+            print('\n{}'.format(objList[0].rolls))#output rolls and have users input what (if any) they want to change
+            cutlist=list(input('Enter the indexes of rolls you wish to change:\n').strip())
+            
+            badChar=False#check if user input appropriate integers
             for index in cutlist:
                 try:
                     index=int(index)
@@ -157,22 +169,36 @@ if __name__=='__main__':
                     quickLoop=True
             if badChar:
                 print('Inappropriate character')
-            elif objList[0].roll(cutlist)==False:
-                quickLoop=False
-                print('\n\n{}'.format(objList[0].rolls))
-        quickLoop=True
+                
+            else:#roll accordingly and check if any rolls remaining if required
+                rollstatus=objList[0].roll(cutlist)
+                if rollstatus==False:
+                    quickLoop=False
+                    print('\n\n{}'.format(objList[0].rolls))
+                else:
+                    quickLoop=True
+                
+        quickLoop=True#Loop to analyse input for dictionary checking for validity
         while quickLoop:
+            
             key=input('Enter the key of the dictionary item you want to change:')
             if key in objList[0].scoreCard:
                 if objList[0].scoreCard[key]==-1:
                     quickLoop=False
-        objList[0].allocateScore(key)
-        objList[0].allocateScore('"Total Score')
+                    
+        objList[0].allocateScore(key)#score allocation
+        
+        objList[0].allocateScore('"Total Score')#checks if scorecard is complete
         if objList[0].scoreCard['"Total Score']!=-1:
             gameLoopFlag=False
+            
             for i in objList[0].scoreCard:#outputs scorecard
                 print(i,objList[0].scoreCard[i])
-        objList[0].allocateScore('"Sum')
+                
+        objList[0].allocateScore('"Sum')#checks if sum and bonus can be auto-filled due to completions of their dependencies
         objList[0].allocateScore('"Bonus')
-        objList[0].rollPrep()
-    print('\n\n============================================================================\n\nYou scored:',objList[0].scoreCard['"Total Score'],'\n\nThanks for playing')
+        
+        objList[0].rollPrep()#resets dice for next round
+        
+    print('\n\n============================================================================\n\nYou scored:',objList[0].scoreCard['"Total Score'],'\n\nThanks for playing')#termination message
+    
