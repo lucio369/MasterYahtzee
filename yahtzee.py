@@ -137,49 +137,57 @@ class Player:
             outMsg=outMsg+i+' '+str(self.scoreCard[i])+'\n'
         return outMsg
 
+def createObjectGroup(x):#OBJECT GROUP GENERATION OF (X) PLAYERS
+    return [Player(i) for i in range(x)]#creating object group
+
+def outputScore(x,sc):#OUTPUT PLAYER (X) SCORE
+    msg='Player {}\n\n{}'
+    return msg.format(x+1,sc)
+
+def rollIndexCheck(x):#CHECKS IF INPUT ONLY HAS INTEGERS IN RANGE(0-4) 
+    for i in x:
+        if not i.isnumeric():
+            return True
+        if i in not range(0,4):
+            return True
+    return False
+
+def rollAndTerminate(i,cl):#rolls anything in (cl) for each (i)
+    if i.roll(cl)==False:
+        print('\n'+i.rolls)
+        return False
+    else:
+        return True
 def gameLoop():
-    gameLoopFlag=True
-    
-    objList=[]#creating object group
-    for i in range(2):
-        objList.append(Player(i))  
-    playerIndex=0
+    '''
+    Loop to analyse input for dictionary checking for validity
+    score allocation
+    check if scorecard complete
+    check if sum and bonus can be autofilled
+    resets dice for next round
+    changes player if possible
+    '''
+    objList,playerIndex=createObjectGroup(2),0#creating object group
     
     topPlayer=[0,0]#initialising top score measure list
     
+    gameLoopFlag=True
     while gameLoopFlag: # game loop
-        print('Player {}\n\n'.format(str(playerIndex+1)))
-        print(objList[playerIndex].outScore())#output player's score card
+        
+        print(outputScore(playerIndex,objList[playerIndex].outScore())#output score card
         
         objList[playerIndex].roll()#initial roll
         
         quickLoop=True#Loop to analyse input for validity
         while quickLoop:
             
-            print('\n{}'.format(objList[playerIndex].rolls))#output rolls and have users input what (if any) they want to change
-            cutlist=list(input('Enter the indexes of rolls you wish to change:\n').strip())
+            print('\n'+objList[playerIndex].rolls)#output rolls and have users input what (if any) they want to change
             
-            badChar=False#check if user input appropriate integers
-            for index in cutlist:
-                try:
-                    index=int(index)
-                    if index in range(0,5):
-                        quickLoop=False
-                    else:
-                        print("That's not 0-4")
-                except ValueError:
-                    badChar=True
-            if badChar:
-                quickLoop=True
-                print('Inappropriate character')
+            cutlist=list(input('Enter the indexes of rolls you wish to change:\n'))#Input formatting
+            
+            quickLoop=rollIndexCheck(cutlist)#check if input appropriate integers
                 
-            else:#roll accordingly and check if any rolls remaining if required
-                rollstatus=objList[playerIndex].roll(cutlist)
-                if rollstatus==False:
-                    quickLoop=False
-                    print('\n\n{}'.format(objList[playerIndex].rolls))
-                else:
-                    quickLoop=True
+            if not quickLoop:rollAndTerminate(objectList[playerIndex],cutlist)
                 
         quickLoop=True#Loop to analyse input for dictionary checking for validity
         while quickLoop:
