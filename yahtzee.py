@@ -1,6 +1,6 @@
 #@PydevCodeAnalysisIgnore
 from random import randint
-from pip._internal import self_outdated_check
+
 class Player:
     def __init__(self,ID):#init function for Player
         #! Addition of dice values
@@ -113,6 +113,7 @@ class Player:
             elif key[1:]=='Total Score':
                 if -1 not in list(self.scoreCard.values())[6:-1]:
                     self.scoreCard[key]=sum(list(self.scoreCard.values())[6:-1])
+        return self.scoreCard['"Total Score']
     
     def roll(self,*args):#rolls dice and allows for specific dice to be rolled
         if len(args)>0:
@@ -148,25 +149,39 @@ def rollIndexCheck(x):#CHECKS IF INPUT ONLY HAS INTEGERS IN RANGE(0-4)
     for i in x:
         if not i.isnumeric():
             return True
-        if i in not range(0,4):
+        if i not in range(0,4):
             return True
     return False
 
-def rollAndTerminate(i,cl):#rolls anything in (cl) for each (i)
+def rollAndTerminate(i,cl):#ROLLS ANYTHING IN (CL) FOR EACH (I)
     if i.roll(cl)==False:
-        print('\n'+i.rolls)
+        print('\n{}'.format(i.rolls))
         return False
     else:
         return True
+
+def checkKeyInDict(i):#RETURNS PRESENSE OF (X) IN (I) DICT AND (X) INPUT
+    x=input('Enter the key of the dictionary item you want to change:\n')
+    try:
+        if i[x]==-1:
+            return False,x
+    except KeyError:
+        pass
+    return True,x
+
+def scoreCardCheck(i):#CHECKS IF TOTAL SCORE IS CALCULATED IN OBJECT (I) AND RETURNS THE GAME LOOP FLAG STATUS
+    if topPlayer[1]<i.allocateScore('"Total Score')!=-1:
+        topPlayer=[playerIndex,i.scoreCard['"Total Score']]
+        if playerIndex==len(objList):
+            playerIndex=0
+            objList.pop()
+        else:
+            objList.pop()
+        if len(objList)==0:
+            return False
+    return True
+
 def gameLoop():
-    '''
-    Loop to analyse input for dictionary checking for validity
-    score allocation
-    check if scorecard complete
-    check if sum and bonus can be autofilled
-    resets dice for next round
-    changes player if possible
-    '''
     objList,playerIndex=createObjectGroup(2),0#creating object group
     
     topPlayer=[0,0]#initialising top score measure list
@@ -174,51 +189,32 @@ def gameLoop():
     gameLoopFlag=True
     while gameLoopFlag: # game loop
         
-        print(outputScore(playerIndex,objList[playerIndex].outScore())#output score card
+        print(outputScore(playerIndex,objList[playerIndex].outScore()))#output score card
         
         objList[playerIndex].roll()#initial roll
         
         quickLoop=True#Loop to analyse input for validity
         while quickLoop:
             
-            print('\n'+objList[playerIndex].rolls)#output rolls and have users input what (if any) they want to change
+            print('\n{}'.format(objList[playerIndex].rolls))#output rolls and have users input what (if any) they want to change
             
             cutlist=list(input('Enter the indexes of rolls you wish to change:\n'))#Input formatting
             
             quickLoop=rollIndexCheck(cutlist)#check if input appropriate integers
                 
-            if not quickLoop:rollAndTerminate(objectList[playerIndex],cutlist)
+            if not quickLoop:quickLoop=rollAndTerminate(objList[playerIndex],cutlist)#rolls unless no input or out of rolls
                 
         quickLoop=True#Loop to analyse input for dictionary checking for validity
         while quickLoop:
             
-            key=input('Enter the key of the dictionary item you want to change:')
-            if key in objList[playerIndex].scoreCard:
-                if objList[playerIndex].scoreCard[key]==-1:
-                    quickLoop=False
-            else:
-                print('Inappropriate key')
-                    
-        objList[playerIndex].allocateScore(key)#score allocation
+            quickLoop,key=checkKeyInDict(objList[playerIndex].scoreCard)#checks vacancy and presence of key in dictionary
         
-        objList[playerIndex].allocateScore('"Total Score')#checks if scorecard is complete
-        if objList[playerIndex].scoreCard['"Total Score']!=-1:
-            if topPlayer[0]<objList[playerIndex].scoreCard['"Total Score']:
-                topPlayer=[playerIndex+1,objList[playerIndex].scoreCard['"Total Score']]
-                objList.pop(playerIndex)
-            if playerIndex == 0 and len(objList) == 0:
-                return topPlayer
-            elif playerIndex == len(objList):
-                playerIndex = 0
-                
-        objList[playerIndex].allocateScore('"Sum')#checks if sum and bonus can be auto-filled due to completions of their dependencies
+        objList[playerIndex].allocateScore('"Sum')#auto fills sum and bonus
         objList[playerIndex].allocateScore('"Bonus')
         
         objList[playerIndex].rollPrep()#resets dice for next round
         
-        playerIndex=playerIndex+1#changes player (if possible)
-        if playerIndex not in range(0,len(objList)):
-            playerIndex=0
+        gameLoopFlag=scoreCardCheck(objList[playerIndex])#score allocation
 
 if __name__=='__main__':#only run if not imported
     topPlayer=gameLoop()
