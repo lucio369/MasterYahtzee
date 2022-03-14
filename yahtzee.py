@@ -1,5 +1,10 @@
 #@PydevCodeAnalysisIgnore
+<<<<<<< HEAD
 from random import randint
+=======
+from random import randint, choice, shuffle
+from time import sleep
+>>>>>>> messyGameLoop
 
 class Player:
     def __init__(self,ID):#init function for Player
@@ -43,7 +48,7 @@ class Player:
             try:
                 self.val_dict[v]+=1
             except KeyError:
-                self.val_dict.update({v:1})
+                self.val_dict[v]=1
     
     def streakCount(self,score,streak,vs):#counts instances of dice
         streakCount=1
@@ -56,7 +61,6 @@ class Player:
             streakRecord=max(streakRecord,streakCount)
         if streakRecord<streak:
             score=0
-        print(streakRecord)
         return score
     
     def allocateScore(self,key):#allocates points according to how roll meets conditions
@@ -138,6 +142,7 @@ class Player:
             outMsg=outMsg+i+' '+str(self.scoreCard[i])+'\n'
         return outMsg
 
+<<<<<<< HEAD
 def createObjectGroup(x):#OBJECT GROUP GENERATION OF (X) PLAYERS
     return [Player(i) for i in range(x)]#creating object group
 
@@ -210,14 +215,128 @@ def gameLoop():
             quickLoop,key=checkKeyInDict(objList[playerIndex].scoreCard)#checks vacancy and presence of key in dictionary
         
         objList[playerIndex].allocateScore('"Sum')#auto fills sum and bonus
+=======
+    
+def gameLoop(objList, playerIndex, topPlayer, stage, fresh, raw_input, ignoreList): 
+    if stage==0:
+        if fresh==True:
+            print('Player {}\n\n{}'.format(playerIndex+1,objList[playerIndex].outScore()))#output player's score card
+            objList[playerIndex].roll()#initial roll
+            print('\n{}Enter the indexes of rolls you wish to change:\n'.format(objList[playerIndex].rolls))#output rolls and have users input what (if any) they want to change
+            return objList, playerIndex, topPlayer, 0, False, ignoreList
+        quickLoop=True    
+        cutlist=list(raw_input.strip())#ignore the rest (we're cool)
+        if len(cutlist)==0:
+            quickLoop=False
+            return objList, playerIndex, topPlayer, 1, True, ignoreList
+        
+        if quickLoop:
+            for index in cutlist:#check if user input appropriate integers
+                try:
+                    rollError=True
+                    if not int(index) in [x for x in range(5)]:
+                        print("That's not 0-4")
+                        break
+                    rollError=False
+                except ValueError:
+                    print("That's not even an integer")
+                    break
+            if rollError==True:
+                print('Enter the indexes of rolls you wish to change:\n')
+                return objList, playerIndex, topPlayer, 0, False, ignoreList
+        
+        quickLoop=objList[playerIndex].roll(cutlist)#roll accordingly and check if any rolls remaining if required
+        print('\n\n{}Enter the indexes of rolls you wish to change:\n'.format(objList[playerIndex].rolls))
+        
+        if quickLoop:
+            return objList, playerIndex, topPlayer, 0, False, ignoreList
+        return objList, playerIndex, topPlayer, 1, True, ignoreList
+    elif stage==1:
+        if fresh==True:
+            print('Enter the key of the dictionary item you want to change:')
+            return objList, playerIndex, topPlayer, 1, False, ignoreList
+        if not raw_input in objList[playerIndex].scoreCard.keys() or not objList[playerIndex].scoreCard[raw_input]==-1:
+            print('Inappropriate key\nEnter the key of the dictionary item you want to change:')
+            return objList, playerIndex, topPlayer, 1, False, ignoreList
+                    
+        objList[playerIndex].allocateScore(raw_input)#score allocation
+        
+        objList[playerIndex].allocateScore('"Sum')#checks if sum and bonus can be auto-filled due to completions of their dependencies
+>>>>>>> messyGameLoop
         objList[playerIndex].allocateScore('"Bonus')
         
         objList[playerIndex].rollPrep()#resets dice for next round
         
+<<<<<<< HEAD
         gameLoopFlag=scoreCardCheck(objList[playerIndex])#score allocation
+=======
+        objList[playerIndex].allocateScore('"Total Score')#checks if scorecard is complete
+        if objList[playerIndex].scoreCard['"Total Score']!=-1:
+            if topPlayer[1]<objList[playerIndex].scoreCard['"Total Score']:
+                topPlayer=[playerIndex+1,objList[playerIndex].scoreCard['"Total Score']]
+            ignoreList.append(playerIndex)
+    
+        playerIndex=playerIndex+1#changes player (if possible)
+        if playerIndex not in range(0,len(objList)):
+            if len(objList)==0:
+                return objList,playerIndex,tuple(topPlayer), 0, True, ignoreList
+            playerIndex=0
+        return objList, playerIndex, topPlayer, 0, True, ignoreList
+>>>>>>> messyGameLoop
 
 if __name__=='__main__':#only run if not imported
-    topPlayer=gameLoop()
-
-print('\n\nPlayer {} wins with {} points!'.format(topPlayer[0],topPlayer[1]))
+    gameLoopFlag=True
+    players=2
+    oL,pI,tP,s,f,rI,iL=[Player(x) for x in range(players)],0,[0,0],0,True,'',[]
+    indexScript=[]
+    actionScript=[x for x in oL[0].scoreCard.keys() if '"' not in x]
+    for i in range(len(actionScript)):
+        temp=''
+        templ=[x for x in range(5)]
+        for j in range(randint(0,5)):
+            tempi=choice(templ)
+            temp=temp+'{}'.format(tempi)
+            templ.remove(tempi)
+        indexScript.append(temp)
+        if temp!='':
+            indexScript.append('')
+    shuffle(indexScript)
+    shuffle(actionScript)
+    indexScript=indexScript*players
+    actionScript=actionScript*players
+    print('\n\n{}\n\n{}'.format(indexScript,actionScript))
+    indexScript=iter(indexScript)
+    actionScript=iter(actionScript)
     
+    while gameLoopFlag:
+        if pI in iL:
+            if len(iL)==players:
+                gameLoopFlag=False
+                break
+            else:
+                while pI in iL:
+                    pI=pI+1
+                    if pI not in range(0,players):
+                        pI=0
+        oL,pI,tP,s,f,iL=gameLoop(oL,pI,tP,s,f,rI,iL)#objList, playerIndex, topPlayer
+        if type(tP) is tuple:
+            gameLoopFlag=False
+            continue
+        if f == False:
+            #rI=input()
+            #for AI
+             if pI==0:
+                 rI=input()
+                 continue
+             if s==0:
+                 rI=next(indexScript)
+             if s==1:
+                 rI=next(actionScript)
+             print(rI)
+                 #input()
+
+            #Play using only keyboard (uncomment 242 and comment out until 251)
+            #Play with bots as well (leave 244 - 251 uncommented)
+            #Play only with bots (comment out 244 - 246
+
+print('\n\nPlayer {} wins with {} points!'.format(tP[0],tP[1]))
