@@ -1,10 +1,6 @@
-#@PydevCodeAnalysisIgnore
-<<<<<<< HEAD
-from random import randint
-=======
+
 from random import randint, choice, shuffle
 from time import sleep
->>>>>>> messyGameLoop
 
 class Player:
     def __init__(self,ID):#init function for Player
@@ -142,7 +138,6 @@ class Player:
             outMsg=outMsg+i+' '+str(self.scoreCard[i])+'\n'
         return outMsg
 
-<<<<<<< HEAD
 def createObjectGroup(x):#OBJECT GROUP GENERATION OF (X) PLAYERS
     return [Player(i) for i in range(x)]#creating object group
 
@@ -215,7 +210,6 @@ def gameLoop():
             quickLoop,key=checkKeyInDict(objList[playerIndex].scoreCard)#checks vacancy and presence of key in dictionary
         
         objList[playerIndex].allocateScore('"Sum')#auto fills sum and bonus
-=======
     
 def gameLoop(objList, playerIndex, topPlayer, stage, fresh, raw_input, ignoreList): 
     if stage==0:
