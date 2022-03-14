@@ -1,4 +1,4 @@
-
+#@PydevCodeAnalysisIgnore
 from random import randint, choice, shuffle
 from time import sleep
 
@@ -113,7 +113,6 @@ class Player:
             elif key[1:]=='Total Score':
                 if -1 not in list(self.scoreCard.values())[6:-1]:
                     self.scoreCard[key]=sum(list(self.scoreCard.values())[6:-1])
-        return self.scoreCard['"Total Score']
     
     def roll(self,*args):#rolls dice and allows for specific dice to be rolled
         if len(args)>0:
@@ -138,78 +137,6 @@ class Player:
             outMsg=outMsg+i+' '+str(self.scoreCard[i])+'\n'
         return outMsg
 
-def createObjectGroup(x):#OBJECT GROUP GENERATION OF (X) PLAYERS
-    return [Player(i) for i in range(x)]#creating object group
-
-def outputScore(x,sc):#OUTPUT PLAYER (X) SCORE
-    msg='Player {}\n\n{}'
-    return msg.format(x+1,sc)
-
-def rollIndexCheck(x):#CHECKS IF INPUT ONLY HAS INTEGERS IN RANGE(0-4) 
-    for i in x:
-        if not i.isnumeric():
-            return True
-        if i not in range(0,4):
-            return True
-    return False
-
-def rollAndTerminate(i,cl):#ROLLS ANYTHING IN (CL) FOR EACH (I)
-    if i.roll(cl)==False:
-        print('\n{}'.format(i.rolls))
-        return False
-    else:
-        return True
-
-def checkKeyInDict(i):#RETURNS PRESENSE OF (X) IN (I) DICT AND (X) INPUT
-    x=input('Enter the key of the dictionary item you want to change:\n')
-    try:
-        if i[x]==-1:
-            return False,x
-    except KeyError:
-        pass
-    return True,x
-
-def scoreCardCheck(i):#CHECKS IF TOTAL SCORE IS CALCULATED IN OBJECT (I) AND RETURNS THE GAME LOOP FLAG STATUS
-    if topPlayer[1]<i.allocateScore('"Total Score')!=-1:
-        topPlayer=[playerIndex,i.scoreCard['"Total Score']]
-        if playerIndex==len(objList):
-            playerIndex=0
-            objList.pop()
-        else:
-            objList.pop()
-        if len(objList)==0:
-            return False
-    return True
-
-def gameLoop():
-    objList,playerIndex=createObjectGroup(2),0#creating object group
-    
-    topPlayer=[0,0]#initialising top score measure list
-    
-    gameLoopFlag=True
-    while gameLoopFlag: # game loop
-        
-        print(outputScore(playerIndex,objList[playerIndex].outScore()))#output score card
-        
-        objList[playerIndex].roll()#initial roll
-        
-        quickLoop=True#Loop to analyse input for validity
-        while quickLoop:
-            
-            print('\n{}'.format(objList[playerIndex].rolls))#output rolls and have users input what (if any) they want to change
-            
-            cutlist=list(input('Enter the indexes of rolls you wish to change:\n'))#Input formatting
-            
-            quickLoop=rollIndexCheck(cutlist)#check if input appropriate integers
-                
-            if not quickLoop:quickLoop=rollAndTerminate(objList[playerIndex],cutlist)#rolls unless no input or out of rolls
-                
-        quickLoop=True#Loop to analyse input for dictionary checking for validity
-        while quickLoop:
-            
-            quickLoop,key=checkKeyInDict(objList[playerIndex].scoreCard)#checks vacancy and presence of key in dictionary
-        
-        objList[playerIndex].allocateScore('"Sum')#auto fills sum and bonus
     
 def gameLoop(objList, playerIndex, topPlayer, stage, fresh, raw_input, ignoreList): 
     if stage==0:
@@ -256,14 +183,10 @@ def gameLoop(objList, playerIndex, topPlayer, stage, fresh, raw_input, ignoreLis
         objList[playerIndex].allocateScore(raw_input)#score allocation
         
         objList[playerIndex].allocateScore('"Sum')#checks if sum and bonus can be auto-filled due to completions of their dependencies
->>>>>>> messyGameLoop
         objList[playerIndex].allocateScore('"Bonus')
         
         objList[playerIndex].rollPrep()#resets dice for next round
         
-<<<<<<< HEAD
-        gameLoopFlag=scoreCardCheck(objList[playerIndex])#score allocation
-=======
         objList[playerIndex].allocateScore('"Total Score')#checks if scorecard is complete
         if objList[playerIndex].scoreCard['"Total Score']!=-1:
             if topPlayer[1]<objList[playerIndex].scoreCard['"Total Score']:
@@ -276,7 +199,6 @@ def gameLoop(objList, playerIndex, topPlayer, stage, fresh, raw_input, ignoreLis
                 return objList,playerIndex,tuple(topPlayer), 0, True, ignoreList
             playerIndex=0
         return objList, playerIndex, topPlayer, 0, True, ignoreList
->>>>>>> messyGameLoop
 
 if __name__=='__main__':#only run if not imported
     gameLoopFlag=True
