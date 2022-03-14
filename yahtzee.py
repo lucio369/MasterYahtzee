@@ -1,6 +1,7 @@
 #@PydevCodeAnalysisIgnore
-from random import randint
+from random import randint, choice, shuffle
 from time import sleep
+
 class Player:
     def __init__(self,ID):#init function for Player
         #! Addition of dice values
@@ -37,7 +38,6 @@ class Player:
     
     #NOTE: Isn't value calculator a kind of form of StreakCount? 
     def valueCalculator(self,vs):#counts values of dice instances
-        print(vs)
         self.tempConstructor()
         for v in vs:
             self.total+=v
@@ -57,7 +57,6 @@ class Player:
             streakRecord=max(streakRecord,streakCount)
         if streakRecord<streak:
             score=0
-        print(streakRecord)
         return score
     
     def allocateScore(self,key):#allocates points according to how roll meets conditions
@@ -139,19 +138,18 @@ class Player:
         return outMsg
 
     
-def gameLoop(objList, playerIndex, topPlayer, stage, fresh, raw_input): 
+def gameLoop(objList, playerIndex, topPlayer, stage, fresh, raw_input, ignoreList): 
     if stage==0:
         if fresh==True:
             print('Player {}\n\n{}'.format(playerIndex+1,objList[playerIndex].outScore()))#output player's score card
             objList[playerIndex].roll()#initial roll
-            print('\n{}'.format(objList[playerIndex].rolls))#output rolls and have users input what (if any) they want to change
-            print('Enter the indexes of rolls you wish to change:\n')
-            return objList, playerIndex, topPlayer, 0, False
+            print('\n{}Enter the indexes of rolls you wish to change:\n'.format(objList[playerIndex].rolls))#output rolls and have users input what (if any) they want to change
+            return objList, playerIndex, topPlayer, 0, False, ignoreList
         quickLoop=True    
         cutlist=list(raw_input.strip())#ignore the rest (we're cool)
         if len(cutlist)==0:
             quickLoop=False
-            return objList, playerIndex, topPlayer, 1, True
+            return objList, playerIndex, topPlayer, 1, True, ignoreList
         
         if quickLoop:
             for index in cutlist:#check if user input appropriate integers
@@ -166,23 +164,21 @@ def gameLoop(objList, playerIndex, topPlayer, stage, fresh, raw_input):
                     break
             if rollError==True:
                 print('Enter the indexes of rolls you wish to change:\n')
-                return objList, playerIndex, topPlayer, 0, False
+                return objList, playerIndex, topPlayer, 0, False, ignoreList
         
         quickLoop=objList[playerIndex].roll(cutlist)#roll accordingly and check if any rolls remaining if required
-        print('\n\n{}'.format(objList[playerIndex].rolls))
-        print('Enter the indexes of rolls you wish to change:\n')
+        print('\n\n{}Enter the indexes of rolls you wish to change:\n'.format(objList[playerIndex].rolls))
         
         if quickLoop:
-            return objList, playerIndex, topPlayer, 0, False
-        return objList, playerIndex, topPlayer, 1, True
+            return objList, playerIndex, topPlayer, 0, False, ignoreList
+        return objList, playerIndex, topPlayer, 1, True, ignoreList
     elif stage==1:
         if fresh==True:
             print('Enter the key of the dictionary item you want to change:')
-            return objList, playerIndex, topPlayer, 1, False
+            return objList, playerIndex, topPlayer, 1, False, ignoreList
         if not raw_input in objList[playerIndex].scoreCard.keys() or not objList[playerIndex].scoreCard[raw_input]==-1:
-            print('Inappropriate key')
-            print('Enter the key of the dictionary item you want to change:')
-            return objList, playerIndex, topPlayer, 1, False
+            print('Inappropriate key\nEnter the key of the dictionary item you want to change:')
+            return objList, playerIndex, topPlayer, 1, False, ignoreList
                     
         objList[playerIndex].allocateScore(raw_input)#score allocation
         
@@ -195,32 +191,68 @@ def gameLoop(objList, playerIndex, topPlayer, stage, fresh, raw_input):
         if objList[playerIndex].scoreCard['"Total Score']!=-1:
             if topPlayer[1]<objList[playerIndex].scoreCard['"Total Score']:
                 topPlayer=[playerIndex+1,objList[playerIndex].scoreCard['"Total Score']]
-                objList.pop(playerIndex)
+            ignoreList.append(playerIndex)
     
         playerIndex=playerIndex+1#changes player (if possible)
         if playerIndex not in range(0,len(objList)):
             if len(objList)==0:
-                return objList,playerIndex,tuple(topPlayer), 0, True
+                return objList,playerIndex,tuple(topPlayer), 0, True, ignoreList
             playerIndex=0
-        return objList, playerIndex, topPlayer, 0, True
+        return objList, playerIndex, topPlayer, 0, True, ignoreList
 
 if __name__=='__main__':#only run if not imported
     gameLoopFlag=True
-    oL,pI,tP,s,f,rI=[Player(x) for x in range(1)],0,[0,0],0,True,''
-    aiScript=['','!1','','!2','','!3','','!4','','!5','','!6',
-          '','£Three of a kind','','£Four of a kind','','$Full House',
-          '','$Small Straight','','$Large Straight','','£Chance',
-          '','$Yahtzee']
-    aiScript=iter(aiScript)
+    players=2
+    oL,pI,tP,s,f,rI,iL=[Player(x) for x in range(players)],0,[0,0],0,True,'',[]
+    indexScript=[]
+    actionScript=[x for x in oL[0].scoreCard.keys() if '"' not in x]
+    for i in range(len(actionScript)):
+        temp=''
+        templ=[x for x in range(5)]
+        for j in range(randint(0,5)):
+            tempi=choice(templ)
+            temp=temp+'{}'.format(tempi)
+            templ.remove(tempi)
+        indexScript.append(temp)
+        if temp!='':
+            indexScript.append('')
+    shuffle(indexScript)
+    shuffle(actionScript)
+    indexScript=indexScript*players
+    actionScript=actionScript*players
+    print('\n\n{}\n\n{}'.format(indexScript,actionScript))
+    indexScript=iter(indexScript)
+    actionScript=iter(actionScript)
+    
     while gameLoopFlag:
-        oL,pI,tP,s,f=gameLoop(oL,pI,tP,s,f,rI)#objList, playerIndex, topPlayer
+        if pI in iL:
+            if len(iL)==players:
+                gameLoopFlag=False
+                break
+            else:
+                while pI in iL:
+                    pI=pI+1
+                    if pI not in range(0,players):
+                        pI=0
+        oL,pI,tP,s,f,iL=gameLoop(oL,pI,tP,s,f,rI,iL)#objList, playerIndex, topPlayer
         if type(tP) is tuple:
             gameLoopFlag=False
             continue
         if f == False:
-            rI=next(aiScript)
-            #sleep(2)
-            print(rI)
+            #rI=input()
+            #for AI
+             if pI==0:
+                 rI=input()
+                 continue
+             if s==0:
+                 rI=next(indexScript)
+             if s==1:
+                 rI=next(actionScript)
+             print(rI)
+                 #input()
 
+            #Play using only keyboard (uncomment 242 and comment out until 251)
+            #Play with bots as well (leave 244 - 251 uncommented)
+            #Play only with bots (comment out 244 - 246
 
 print('\n\nPlayer {} wins with {} points!'.format(tP[0],tP[1]))
