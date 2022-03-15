@@ -1,4 +1,8 @@
 #@PydevCodeAnalysisIgnore
+import os
+from dotenv import load_dotenv
+from discord.ext import commands
+
 from random import randint, choice, shuffle
 from time import sleep
 
@@ -200,7 +204,7 @@ def gameLoop(objList, playerIndex, topPlayer, stage, fresh, raw_input, ignoreLis
             playerIndex=0
         return objList, playerIndex, topPlayer, 0, True, ignoreList
 
-if __name__=='__main__':#only run if not imported
+def main():
     gameLoopFlag=True
     players=2
     oL,pI,tP,s,f,rI,iL=[Player(x) for x in range(players)],0,[0,0],0,True,'',[]
@@ -255,4 +259,25 @@ if __name__=='__main__':#only run if not imported
             #Play with bots as well (leave 244 - 251 uncommented)
             #Play only with bots (comment out 244 - 246
 
-print('\n\nPlayer {} wins with {} points!'.format(tP[0],tP[1]))
+load_dotenv()#reads bot token
+TOKEN = os.getenv('DISCORD_TOKEN')
+GUILD = os.getenv('DISCORD_GUILD')
+
+bot = commands.Bot(command_prefix='!')#creates discord client and runs it
+
+@bot.event
+async def on_ready():
+    print(bot.user,'is connected')#status message for console
+
+@bot.listen()
+async def on_message(ctx):
+    if ctx.author == bot.user:
+        return 
+@bot.command()
+async def x(ctx,*apple):
+    await ctx.send('output')
+
+if __name__=='__main__':#only run if not imported
+    bot.run(TOKEN)
+
+#Have fun with embeds
