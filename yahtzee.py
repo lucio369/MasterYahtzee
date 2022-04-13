@@ -17,6 +17,7 @@ class Player:
             '!2': -1,
             '!3': -1,
             '!4': -1,
+            
             '!5': -1,
             '!6': -1,
             '"Sum': -1,
@@ -65,9 +66,11 @@ class Player:
     def allocateScore(self, key):  # sets points according to roll conditions
         try:
             if self.scoreCard[key] != -1:
-                return
+                print('used key')
+                return False
         except KeyError:
-            return
+            print('bad key')
+            return False
         if key[:1] == '!':  # 1-6
             total = 0
             for v in self.rolls:
@@ -116,8 +119,9 @@ class Player:
                     self.scoreCard[key] = score
             elif key[1:] == 'Total Score':
                 if -1 not in list(self.scoreCard.values())[6:-1]:
-                    self.scoreCard[key] = sum(
-                        list(self.scoreCard.values())[6:-1])
+                    self.scoreCard[key] = sum(list(self.scoreCard.values())[6:-1])
+                    return True
+                return False
 
     def roll(self, *args):  # rolls specific (or not) dice to be rolled
         if len(args) > 0:
@@ -141,7 +145,59 @@ class Player:
             outMsg = outMsg+i+' '+str(self.scoreCard[i])+'\n'
         return outMsg
 
+    def reqRoll(self):  # requesting input for rolls to change 1.a
+        #print(f'Player {self.ID}\n\n{self.outScore()}')
+        print(f'Input the rolls you wish to change```{self.rolls}```')
 
+    def anlsRoll(self,msg): # analyses roll to check if input is appropriate (msg formatted as list of stripped string 1.b
+        if len(msg) == 0:return True
+        try:
+            for index in msg:
+                if not int(index) in [x for x in range(5)]:
+                    print('That isn\'t an available dice')
+                    raise anlsErr
+        except ValueError:
+            print('That input isn\'t numeric')
+            raise anlsErr
+        except anlsErr:
+            return False
+        else:
+            return True
+
+    def reqAllocate(self):  # requesting input to allocate roll 2.a.i
+        print(f'{self.outScore()}\n\nEnter the key of the dictionary item you wish to change')
+
+    def chckScore(self,msg):    # allocating appropriate score according to scorecard 2.a.ii
+        try:
+            if msg not in self.scoreCard.keys():
+                print('Inappropriate key')
+                raise anlsErr
+            elif self.scoreCard[msg] != -1:
+                print('Points already allocated here')
+                raise anlsErr
+        except anlsErr:
+            self.reqAllocate()
+            return False
+        else:
+            self.allocateScore(msg)
+            return True
+        
+    def autoAllocate(self): # allocate further points where possible 2.b
+        objList[playerIndex].allocateScore('"Sum')
+        objList[playerIndex].allocateScore('"Bonus')
+        return objList[playerIndex].allocateScore('"Total Score'): 
+
+    
+def game():
+    '''
+    Stage 1:
+    a. awaiting input for rolls to change
+    b. analysing rolls and checking for remaining rolls (prompting input if has more rolls)
+    Stage 2:
+    a. awaiting input to determine what to allocate the roll to
+       allocating appropriate score according to validity of rolls according to scorecard
+    b. Score allocation
+    '''
 def game(objList, playerIndex, topPlayer, stage, fresh, raw_input, ignoreList):
     if stage == 0:
         if fresh is True:
@@ -225,7 +281,13 @@ def game(objList, playerIndex, topPlayer, stage, fresh, raw_input, ignoreList):
             playerIndex = 0
         return objList, playerIndex, topPlayer, 0, True, ignoreList
 
-
+def main(players):
+    '''
+    setup initial parameters
+    gameloop:
+        break/continue if player finished
+        run game for player
+    '''
 def main():
     gameLoopFlag = True
     players = 2
@@ -292,6 +354,7 @@ def main():
 
 load_dotenv()  # reads bot token
 TOKEN = os.getenv('DISCORD_TOKEN')
+
 GUILD = os.getenv('DISCORD_GUILD')
 
 bot = commands.Bot(command_prefix='!')  # creates discord client and runs it
@@ -307,12 +370,18 @@ async def on_message(ctx):
     if ctx.author == bot.user:
         return
 
-
 @bot.command()
-async def x(ctx, *apple):
-    await ctx.send('output')
-
+async def yahtzee(ctx, *players):
+    playerString=' , '.join([x for x in players])
+    await ctx.send(f'```Inviting players...\n{playerString} ```')
+    
 if __name__ == '__main__':  # only run if not imported
     bot.run(TOKEN)
 
 # Have fun with embeds
+
+'''
+@bot.command()
+async def x(ctx, *apple):
+    await ctx.send('output')
+'''
