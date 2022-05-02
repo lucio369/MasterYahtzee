@@ -4,7 +4,7 @@ from discord.ext import commands
 
 from random import randint, choice, shuffle
 from time import sleep
-
+from itertools import cycle
 
 class Player:
     def __init__(self, ID):  # init function for Player
@@ -30,6 +30,7 @@ class Player:
             '£Chance': -1,
             '$Yahtzee': -1,
             '"Total Score': -1}
+        self.stage,self.fresh,self.complete=0, True, False
         self.tempConstructor()
         self.rollPrep()
 
@@ -145,12 +146,8 @@ class Player:
             outMsg = outMsg+i+' '+str(self.scoreCard[i])+'\n'
         return outMsg
 
-    def reqRoll(self):  # requesting input for rolls to change 1.a
-        #print(f'Player {self.ID}\n\n{self.outScore()}')
-        print(f'Input the rolls you wish to change```{self.rolls}```')
-
     def anlsRoll(self,msg): # analyses roll to check if input is appropriate (msg formatted as list of stripped string 1.b
-        if len(msg) == 0:return True
+        #if len(msg) == 0:return True
         try:
             for index in msg:
                 if not int(index) in [x for x in range(5)]:
@@ -163,9 +160,6 @@ class Player:
             return False
         else:
             return True
-
-    def reqAllocate(self):  # requesting input to allocate roll 2.a.i
-        print(f'{self.outScore()}\n\nEnter the key of the dictionary item you wish to change')
 
     def chckScore(self,msg):    # allocating appropriate score according to scorecard 2.a.ii
         try:
@@ -185,10 +179,10 @@ class Player:
     def autoAllocate(self): # allocate further points where possible 2.b
         objList[playerIndex].allocateScore('"Sum')
         objList[playerIndex].allocateScore('"Bonus')
-        return objList[playerIndex].allocateScore('"Total Score'): 
+        return objList[playerIndex].allocateScore('"Total Score')
 
     
-def game():
+def game(player,msg):
     '''
     Stage 1:
     a. awaiting input for rolls to change
@@ -198,159 +192,43 @@ def game():
        allocating appropriate score according to validity of rolls according to scorecard
     b. Score allocation
     '''
-def game(objList, playerIndex, topPlayer, stage, fresh, raw_input, ignoreList):
+    
     if stage == 0:
-        if fresh is True:
-            # output player's score card
-            print('Player {}\n\n{}'.format(
-                playerIndex+1, objList[playerIndex].outScore()))
-            objList[playerIndex].roll()  # initial roll
-            # output rolls and have users input what they want to change
-            rMessage = '\n{}Enter the indexes of rolls you wish to change:\n'
-            print(rMessage.format(objList[playerIndex].rolls))
-            return objList, playerIndex, topPlayer, 0, False, ignoreList
-        quickLoop = True
-        cutlist = list(raw_input.strip())  # ignore the rest (we're cool)
-        if len(cutlist) == 0:
-            quickLoop = False
-            return objList, playerIndex, topPlayer, 1, True, ignoreList
-
-        if quickLoop:
-            for index in cutlist:  # check if user input appropriate integers
-                try:
-                    rollError = True
-                    if not int(index) in [x for x in range(5)]:
-                        print("That's not 0-4")
-                        break
-                    rollError = False
-                except ValueError:
-                    print("That's not even an integer")
-                    break
-            if rollError is True:
-                print('Enter the indexes of rolls you wish to change:\n')
-                return objList, playerIndex, topPlayer, 0, False, ignoreList
-
-        # roll accordingly and check if any rolls remaining if required
-        quickLoop = objList[playerIndex].roll(cutlist)
-        print('\n\n{}Enter the indexes of rolls you wish to change:\n'.format(
-            objList[playerIndex].rolls))
-
-        if quickLoop:
-            return objList, playerIndex, topPlayer, 0, False, ignoreList
-        return objList, playerIndex, topPlayer, 1, True, ignoreList
-    elif stage == 1:
-        if fresh is True:
-            print('Enter the key of the dictionary item you want to change:')
-            return objList, playerIndex, topPlayer, 1, False, ignoreList
-            tOutput = ''
-        if raw_input not in objList[playerIndex].scoreCard.keys():
-            tOutput = '''
-            Inappropriate key
-            Enter the key of the dictionary item you want to change:
-            '''
-        elif objList[playerIndex].scoreCard[raw_input] != -1:
-            tOutput = '''
-            Inappropriate key
-            Enter the key of the dictionary item you want to change:
-            '''
-        if tOutput != '':
-            print(tOutput)
-            return objList, playerIndex, topPlayer, 1, False, ignoreList
-
-        objList[playerIndex].allocateScore(raw_input)  # score allocation
-
-        # checks if sum and bonus can be auto-filled
-        objList[playerIndex].allocateScore('"Sum')
-        objList[playerIndex].allocateScore('"Bonus')
-
-        objList[playerIndex].rollPrep()  # resets dice for next round
-
-        # checks if scorecard is complete
-        objList[playerIndex].allocateScore('"Total Score')
-        if objList[playerIndex].scoreCard['"Total Score'] != -1:
-            if topPlayer[1] < objList[playerIndex].scoreCard['"Total Score']:
-                sCard = objList[playerIndex].scoreCard
-                topPlayer = [playerIndex+1, sCard['"Total Score']]
-            ignoreList.append(playerIndex)
-
-        playerIndex = playerIndex+1  # changes player (if possible)
-        if playerIndex not in range(0, len(objList)):
-            if len(objList) == 0:
-                topPlayer = tuple(topPlayer)
-                return objList, playerIndex, topPlayer, 0, True, ignoreList
-            playerIndex = 0
-        return objList, playerIndex, topPlayer, 0, True, ignoreList
-
-def main(players):
+        if player.fresh == True:
+            print(f'Input the rolls you wish to change```{player.rolls}```')
+            player.fresh=False
+        else:
+            player.fresh=True
+            if player.anlsRoll(msg):
+                player.stage=1
+    else:
+        if player.fresh == True:
+            print(f'{player.outScore()}\n\nEnter the key of the dictionary item you wish to change')
+        else:
+            player.fresh=True
+            if player.chckScore(msg):
+                player.stage=0
+                if player.autoAllocate():
+                    player.complete = True
+                    return True
+    return False
+  
+def main(p,msg):
     '''
-    setup initial parameters
-    gameloop:
-        break/continue if player finished
-        run game for player
+    initial parameters (maybe having main and game functions in a class might be useful??)
+
+    check if author is next in queue (whitelist)| Any player can go when they want
+        OR
+    check if author is still involved (whiteItem)| One at a time
+    
+    run game for author
+    remove finished authors and add score to leaderboard
+    if no authors remaining, reveal leaderboard
     '''
-def main():
-    gameLoopFlag = True
-    players = 2
-    oL = [Player(x) for x in range(players)]
-    pI = 0
-    tP = [0, 0]
-    s = 0
-    f = True
-    rI = ''
-    iL = []
-
-    indexScript = []
-    actionScript = [x for x in oL[0].scoreCard.keys() if '"' not in x]
-    for i in range(len(actionScript)):
-        temp = ''
-        templ = [x for x in range(5)]
-        for j in range(randint(0, 5)):
-            tempi = choice(templ)
-            temp = temp+'{}'.format(tempi)
-            templ.remove(tempi)
-        indexScript.append(temp)
-        if temp != '':
-            indexScript.append('')
-    shuffle(indexScript)
-    shuffle(actionScript)
-    indexScript = indexScript*players
-    actionScript = actionScript*players
-    print('\n\n{}\n\n{}'.format(indexScript, actionScript))
-    indexScript = iter(indexScript)
-    actionScript = iter(actionScript)
-
-    while gameLoopFlag:
-        if pI in iL:
-            if len(iL) == players:
-                gameLoopFlag = False
-                break
-            else:
-                while pI in iL:
-                    pI = pI+1
-                    if pI not in range(0, players):
-                        pI = 0
-        # objList, playerIndex, topPlayer
-        oL, pI, tP, s, f, iL = game(oL, pI, tP, s, f, rI, iL)
-        if type(tP) is tuple:
-            gameLoopFlag = False
-            continue
-        if f is False:
-            # rI=input()
-            # for AI
-            if pI == 0:
-                rI = input()
-                continue
-            if s == 0:
-                rI = next(indexScript)
-            if s == 1:
-                rI = next(actionScript)
-            print(rI)
-            # input()
-
-            # Multiplayer w/ keyboard (uncomment 242 and comment out until 251)
-            # Play with bots as well (leave 244 - 251 uncommented)
-            # Play only with bots (comment out 244 - 246)
-
+    if gm == 'y':
+        print('hmm')
+    print('ohh')
+    
 
 load_dotenv()  # reads bot token
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -369,19 +247,17 @@ async def on_ready():
 async def on_message(ctx):
     if ctx.author == bot.user:
         return
+    
 
 @bot.command()
-async def yahtzee(ctx, *players):
-    playerString=' , '.join([x for x in players])
-    await ctx.send(f'```Inviting players...\n{playerString} ```')
+async def yahtzee(ctx, gm, *p):
+    bot.whiteSet=set(p)
+    bot.players=[Player(x) for x in range(len(p))]
+    bot.itPlayers=iter(bot.players)
+    bot.gm=gm
+    await bot.main()##needs work
     
 if __name__ == '__main__':  # only run if not imported
     bot.run(TOKEN)
 
 # Have fun with embeds
-
-'''
-@bot.command()
-async def x(ctx, *apple):
-    await ctx.send('output')
-'''
